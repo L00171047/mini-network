@@ -92,7 +92,75 @@ Resources:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
       SubnetId: !Ref publicSubnet
-      RouteTableId: !Ref PublicRouteTable         
+      RouteTableId: !Ref PublicRouteTable
+
+  secSSHJumpbox:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: SSHJumpbox
+      GroupDescription: Security Group to Allow SSH connections into Jumpbox
+      VpcId: !Ref myVPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: sg-Jumpbox-SSH
+
+  secSSHPrivate:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: SSHPrivateInstances
+      GroupDescription: Security Group to Allow SSH connections into Private Instances
+      VpcId: !Ref myVPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: !Ref secSSHJumpbox
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: sg-Jumpbox-SSH
+          
+  jumpBoxEC2:
+    Type: AWS::EC2::Instance
+    Properties:
+      KeyName: jumpbox
+      ImageId: ami-09d3b3274b6c5d4aa
+      InstanceType: t2.micro
+      AvailabilityZone: !Select [ 0, !GetAZs '' ]
+      SubnetId: !Ref publicSubnet
+      SecurityGroupIds:
+        - !Ref secSSHJumpbox
+      Tags:
+        - Key: Name
+          Value: jumpBox    
+
+  webServerEc2:
+    Type: AWS::EC2::Instance
+    Properties:
+      KeyName: jumpbox
+      ImageId: ami-09d3b3274b6c5d4aa
+      InstanceType: t2.micro
+      AvailabilityZone: !Select [ 0, !GetAZs '' ]
+      SubnetId: !Ref privateSubnet
+      SecurityGroupIds:
+        - !Ref secSSHPrivate
+      Tags:
+        - Key: Name
+          Value: webServer     
 
 # Outputs:
 #   set of outputs
