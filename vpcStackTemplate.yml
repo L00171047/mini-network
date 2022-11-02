@@ -61,6 +61,17 @@ Resources:
         - Key: Name
           Value: PrivateSubnetVPC
 
+  privateSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Select [ 1, !GetAZs '' ]
+      VpcId: !Ref myVPC
+      CidrBlock: 10.0.2.0/24
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: PrivateSubnetVPC
+
   PublicRouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
@@ -102,13 +113,25 @@ Resources:
       VpcId: !Ref myVPC
       SecurityGroupIngress:
         - IpProtocol: tcp
-          FromPort: 80
-          ToPort: 80
+          FromPort: 22
+          ToPort: 22
           CidrIp: 0.0.0.0/0
       SecurityGroupEgress:
         - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
           FromPort: 80
           ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 3306
+          ToPort: 3306
           CidrIp: 0.0.0.0/0
       Tags:
         - Key: Name
@@ -122,17 +145,53 @@ Resources:
       VpcId: !Ref myVPC
       SecurityGroupIngress:
         - IpProtocol: tcp
-          FromPort: 80
-          ToPort: 80
-          CidrIp: !Ref secSSHJumpbox
+          FromPort: 22
+          ToPort: 22
+          SourceSecurityGroupId: !GetAtt secSSHJumpbox.GroupId
       SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          DestinationSecurityGroupId: !GetAtt secSSHJumpbox.GroupId
         - IpProtocol: tcp
           FromPort: 80
           ToPort: 80
+          DestinationSecurityGroupId: !GetAtt secSSHJumpbox.GroupId
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          DestinationSecurityGroupId: !GetAtt secSSHJumpbox.GroupId
+        - IpProtocol: tcp
+          FromPort: 3306
+          ToPort: 3306
           CidrIp: 0.0.0.0/0
       Tags:
         - Key: Name
-          Value: sg-Jumpbox-SSH
+          Value: sg-Private-SSH
+
+  secDBPrivate:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: SSHPrivateDB
+      GroupDescription: Security Group to Allows to connect to RDS from ec2
+      VpcId: !Ref myVPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 3306
+          ToPort: 3306
+          SourceSecurityGroupId: !GetAtt secSSHJumpbox.GroupId
+        - IpProtocol: tcp
+          FromPort: 3306
+          ToPort: 3306
+          SourceSecurityGroupId: !GetAtt secSSHPrivate.GroupId
+      # SecurityGroupEgress:
+      #   - IpProtocol: tcp
+      #     FromPort: 22
+      #     ToPort: 22
+      #     DestinationSecurityGroupId: !GetAtt secSSHJumpbox.GroupId
+      Tags:
+        - Key: Name
+          Value: sg-Private-DB
           
   jumpBoxEC2:
     Type: AWS::EC2::Instance
@@ -160,7 +219,47 @@ Resources:
         - !Ref secSSHPrivate
       Tags:
         - Key: Name
-          Value: webServer     
+          Value: webServer    
+
+
+  rdsDBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: Subnet group for RDS Instance
+      SubnetIds:
+        - !Ref privateSubnet
+        - !Ref privateSubnet1
+
+  rdsDBInstance:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      AllocatedStorage: 20
+      DBInstanceClass: db.t3.micro
+      AvailabilityZone: !Select [ 0, !GetAZs '' ]
+      BackupRetentionPeriod: 0
+      DBInstanceIdentifier: production-database
+      DBSubnetGroupName: !Ref rdsDBSubnetGroup
+      Engine: mysql
+      EngineVersion: 8.0.28
+      # KmsKeyId: 
+      # LicenseModel: 
+      MasterUsername: admin
+      MasterUserPassword: password
+      MultiAZ: false
+      # OptionGroupName: 
+      Port: 3306
+      EnablePerformanceInsights: false
+      # PreferredBackupWindow: 
+      # PreferredMaintenanceWindow: 
+      PubliclyAccessible: false
+      # SourceDBInstanceIdentifier: 
+      StorageEncrypted: false
+      StorageType: gp2
+      VPCSecurityGroups:
+        - !Ref secDBPrivate
+      Tags:
+        - Key: Name
+          Value: database-1
 
 # Outputs:
 #   set of outputs
