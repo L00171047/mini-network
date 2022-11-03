@@ -1,0 +1,53 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: >
+  The template is used to create a VPC with CIDR provided as parameter.
+
+# Metadata:
+#   template metadata
+
+Parameters:
+  VPCCIDR: 
+    Description: The CIDR(/16) value for VPC
+    Type: String
+    Default: 10.0.0.0/16
+    #Regex to check CIDR
+    AllowedPattern: ^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}(\/16)$
+# (\/([0-9]|[1-2][0-9]|3[0-2]))$  If we need to match CIDR prefix of 0-32
+    ConstraintDescription: Please enter a valid CIDR.
+
+Resources:
+  VpcStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub https://cloudformation-templates-atu.s3.amazonaws.com/vpc-creation.yml
+      TimeoutInMinutes: 5
+      Parameters:
+        VPCCIDR: !Ref VPCCIDR
+        # VPCName: !Ref VPCName
+        # PublicSubnet1Cidr: !Ref PublicSubnet1Cidr
+        # PublicSubnet2Cidr: !Ref PublicSubnet2Cidr
+
+  EC2Stack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub https://cloudformation-templates-atu.s3.amazonaws.com/ec2-creation.yml
+      TimeoutInMinutes: 5
+      Parameters:
+        VPC: !GetAtt VpcStack.Outputs.VPC
+        PublicSubnet1: !GetAtt VpcStack.Outputs.PublicSubnet1
+        PrivateSubnet1: !GetAtt VpcStack.Outputs.PrivateSubnet1
+        PrivateSubnet2: !GetAtt VpcStack.Outputs.PrivateSubnet2
+        secSSHJumpbox: !GetAtt VpcStack.Outputs.secSSHJumpbox
+        secSSHPrivate: !GetAtt VpcStack.Outputs.secSSHPrivate
+
+  RDSStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub https://cloudformation-templates-atu.s3.amazonaws.com/rds-creation.yml
+      TimeoutInMinutes: 5
+      Parameters:
+        PrivateSubnet1: !GetAtt VpcStack.Outputs.PrivateSubnet1
+        PrivateSubnet2: !GetAtt VpcStack.Outputs.PrivateSubnet2
+        secDBPrivate: !GetAtt VpcStack.Outputs.secDBPrivate

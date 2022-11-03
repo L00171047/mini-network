@@ -1,0 +1,62 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: >
+  The template is used to create a VPC with CIDR provided as parameter.
+
+# Metadata:
+#   template metadata
+
+Parameters:
+  PrivateSubnet1:
+     Description: The private subnet 1
+     Type: String
+  PrivateSubnet2:
+     Description: The private subnet 2
+     Type: String
+  secDBPrivate:
+     Description: The secDBPrivate
+     Type: String
+
+Resources:
+  rdsDBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: Subnet group for RDS Instance
+      SubnetIds:
+        - !Ref PrivateSubnet1
+        - !Ref PrivateSubnet2
+
+  rdsDBInstance:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      AllocatedStorage: 20
+      DBInstanceClass: db.t3.micro
+      AvailabilityZone: !Select [ 0, !GetAZs '' ]
+      BackupRetentionPeriod: 0
+      DBInstanceIdentifier: production-database2
+      DBSubnetGroupName: !Ref rdsDBSubnetGroup
+      Engine: mysql
+      EngineVersion: 8.0.28
+      # KmsKeyId: 
+      # LicenseModel: 
+      MasterUsername: admin
+      MasterUserPassword: password
+      MultiAZ: false
+      # OptionGroupName: 
+      Port: 3306
+      EnablePerformanceInsights: false
+      # PreferredBackupWindow: 
+      # PreferredMaintenanceWindow: 
+      PubliclyAccessible: false
+      # SourceDBInstanceIdentifier: 
+      StorageEncrypted: false
+      StorageType: gp2
+      VPCSecurityGroups:
+        - !Ref secDBPrivate
+      Tags:
+        - Key: Name
+          Value: database-1
+
+# Outputs:
+#   set of outputs

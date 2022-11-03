@@ -1,0 +1,72 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: >
+  The template is used to create a VPC with CIDR provided as parameter.
+
+# Metadata:
+#   template metadata
+
+Parameters:
+  VPC:
+    Description: The ID of the VPC
+    Type: String
+  PublicSubnet1:
+    Description: The public subnet
+    Type: String
+  PrivateSubnet1:
+    Description: The private subnet 1
+    Type: String
+  PrivateSubnet2:
+    Description: The private subnet 2
+    Type: String
+  secSSHJumpbox:
+    Description: The secSSHJumpbox
+    Type: String
+  secSSHPrivate:
+    Description: The secSSHJumpbox
+    Type: String
+
+# Rules:
+#   set of rules
+
+# Mappings:
+#   set of mappings
+
+# Conditions:
+#   set of conditions
+
+# Transform:
+#   set of transforms
+
+Resources:
+  jumpBoxEC2:
+    Type: AWS::EC2::Instance
+    Properties:
+      KeyName: jumpbox
+      ImageId: ami-09d3b3274b6c5d4aa
+      InstanceType: t2.micro
+      AvailabilityZone: !Select [ 0, !GetAZs '' ]
+      SubnetId: !Ref PublicSubnet1
+      SecurityGroupIds:
+        - !Ref secSSHJumpbox
+      Tags:
+        - Key: Name
+          Value: jumpBox    
+
+  webServerEc2:
+    Type: AWS::EC2::Instance
+    Properties:
+      KeyName: jumpbox
+      ImageId: ami-09d3b3274b6c5d4aa
+      InstanceType: t2.micro
+      AvailabilityZone: !Select [ 0, !GetAZs '' ]
+      SubnetId: !Ref PrivateSubnet1
+      SecurityGroupIds:
+        - !Ref secSSHPrivate
+      Tags:
+        - Key: Name
+          Value: webServer
+
+# Outputs:
+#   set of outputs

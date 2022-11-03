@@ -30,52 +30,52 @@ Parameters:
 #   set of transforms
 
 Resources:
-  myVPC:
+  VPC:
     Type: AWS::EC2::VPC
     Properties:
       CidrBlock: !Ref VPCCIDR
       EnableDnsSupport: true
       Tags:
         - Key: Name
-          Value: myVPC
-
-  publicSubnet:
+          Value: !Join [ "-", [ "vpc",!Ref "AWS::Region","dev","webApp" ] ]
+          
+  publicSubnet1:
     Type: AWS::EC2::Subnet
     Properties:
       AvailabilityZone: !Select [ 0, !GetAZs '' ]
-      VpcId: !Ref myVPC
+      VpcId: !Ref VPC
       CidrBlock: 10.0.0.0/24
       MapPublicIpOnLaunch: true
       Tags:
         - Key: Name
-          Value: PublicSubnetVPC
-
-  privateSubnet:
-    Type: AWS::EC2::Subnet
-    Properties:
-      AvailabilityZone: !Select [ 0, !GetAZs '' ]
-      VpcId: !Ref myVPC
-      CidrBlock: 10.0.1.0/24
-      MapPublicIpOnLaunch: false
-      Tags:
-        - Key: Name
-          Value: PrivateSubnetVPC
+          Value: publicSubnet1
 
   privateSubnet1:
     Type: AWS::EC2::Subnet
     Properties:
+      AvailabilityZone: !Select [ 0, !GetAZs '' ]
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.1.0/24
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: privateSubnet1
+
+  privateSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
       AvailabilityZone: !Select [ 1, !GetAZs '' ]
-      VpcId: !Ref myVPC
+      VpcId: !Ref VPC
       CidrBlock: 10.0.2.0/24
       MapPublicIpOnLaunch: false
       Tags:
         - Key: Name
-          Value: PrivateSubnetVPC
+          Value: privateSubnet2
 
   PublicRouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
-      VpcId: !Ref myVPC
+      VpcId: !Ref VPC
       Tags:
         - Key: Name
           Value: routeTableVPC
@@ -89,7 +89,7 @@ Resources:
   AttachGateway:
     Type: AWS::EC2::VPCGatewayAttachment
     Properties:
-      VpcId: !Ref myVPC
+      VpcId: !Ref VPC
       InternetGatewayId: !Ref igwName
   
   routeName:
@@ -102,7 +102,7 @@ Resources:
   routeTableAssocName:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
-      SubnetId: !Ref publicSubnet
+      SubnetId: !Ref publicSubnet1
       RouteTableId: !Ref PublicRouteTable
 
   secSSHJumpbox:
@@ -110,7 +110,7 @@ Resources:
     Properties:
       GroupName: SSHJumpbox
       GroupDescription: Security Group to Allow SSH connections into Jumpbox
-      VpcId: !Ref myVPC
+      VpcId: !Ref VPC
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 22
@@ -142,7 +142,7 @@ Resources:
     Properties:
       GroupName: SSHPrivateInstances
       GroupDescription: Security Group to Allow SSH connections into Private Instances
-      VpcId: !Ref myVPC
+      VpcId: !Ref VPC
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 22
@@ -174,7 +174,7 @@ Resources:
     Properties:
       GroupName: SSHPrivateDB
       GroupDescription: Security Group to Allows to connect to RDS from ec2
-      VpcId: !Ref myVPC
+      VpcId: !Ref VPC
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 3306
@@ -192,74 +192,29 @@ Resources:
       Tags:
         - Key: Name
           Value: sg-Private-DB
-          
-  jumpBoxEC2:
-    Type: AWS::EC2::Instance
-    Properties:
-      KeyName: jumpbox
-      ImageId: ami-09d3b3274b6c5d4aa
-      InstanceType: t2.micro
-      AvailabilityZone: !Select [ 0, !GetAZs '' ]
-      SubnetId: !Ref publicSubnet
-      SecurityGroupIds:
-        - !Ref secSSHJumpbox
-      Tags:
-        - Key: Name
-          Value: jumpBox    
 
-  webServerEc2:
-    Type: AWS::EC2::Instance
-    Properties:
-      KeyName: jumpbox
-      ImageId: ami-09d3b3274b6c5d4aa
-      InstanceType: t2.micro
-      AvailabilityZone: !Select [ 0, !GetAZs '' ]
-      SubnetId: !Ref privateSubnet
-      SecurityGroupIds:
-        - !Ref secSSHPrivate
-      Tags:
-        - Key: Name
-          Value: webServer    
-
-
-  rdsDBSubnetGroup:
-    Type: AWS::RDS::DBSubnetGroup
-    Properties:
-      DBSubnetGroupDescription: Subnet group for RDS Instance
-      SubnetIds:
-        - !Ref privateSubnet
-        - !Ref privateSubnet1
-
-  rdsDBInstance:
-    Type: AWS::RDS::DBInstance
-    Properties:
-      AllocatedStorage: 20
-      DBInstanceClass: db.t3.micro
-      AvailabilityZone: !Select [ 0, !GetAZs '' ]
-      BackupRetentionPeriod: 0
-      DBInstanceIdentifier: production-database
-      DBSubnetGroupName: !Ref rdsDBSubnetGroup
-      Engine: mysql
-      EngineVersion: 8.0.28
-      # KmsKeyId: 
-      # LicenseModel: 
-      MasterUsername: admin
-      MasterUserPassword: password
-      MultiAZ: false
-      # OptionGroupName: 
-      Port: 3306
-      EnablePerformanceInsights: false
-      # PreferredBackupWindow: 
-      # PreferredMaintenanceWindow: 
-      PubliclyAccessible: false
-      # SourceDBInstanceIdentifier: 
-      StorageEncrypted: false
-      StorageType: gp2
-      VPCSecurityGroups:
-        - !Ref secDBPrivate
-      Tags:
-        - Key: Name
-          Value: database-1
+Outputs:
+  VPC:
+     Description: The ID of the VPC
+     Value: !Ref VPC
+  PublicSubnet1:
+     Description: The public subnet
+     Value: !Ref publicSubnet1
+  PrivateSubnet1:
+     Description: The private subnet 1
+     Value: !Ref privateSubnet1
+  PrivateSubnet2:
+     Description: The private subnet 2
+     Value: !Ref privateSubnet2
+  secSSHJumpbox:
+     Description: The security group for jumpbox
+     Value: !Ref secSSHJumpbox
+  secSSHPrivate:
+     Description: The security group for ec2 instances in private subnet
+     Value: !Ref secSSHPrivate
+  secDBPrivate:
+     Description: The security group for DB in private subnet
+     Value: !Ref secDBPrivate
 
 # Outputs:
 #   set of outputs
