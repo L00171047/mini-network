@@ -14,14 +14,64 @@ Parameters:
     Default: 10.0.0.0/16
     #Regex to check CIDR
     AllowedPattern: ^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}(\/16)$
-# (\/([0-9]|[1-2][0-9]|3[0-2]))$  If we need to match CIDR prefix of 0-32
-    ConstraintDescription: Please enter a valid CIDR.
-
+    ConstraintDescription: Please enter a valid CIDR (/16).
   AZs:
     Description: Select 3 Availability zones
     Type: List<AWS::EC2::AvailabilityZone::Name>
     Default: us-east-1a, us-east-1b,us-east-1c
     ConstraintDescription: Please select 3 Availability zones
+  PublicSubnet1CIDR: 
+    Description: The CIDR(/24) value for VPC
+    Type: String
+    Default: 10.0.0.0/24
+    #Regex to check CIDR
+    AllowedPattern: ^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}(\/24)$
+    ConstraintDescription: Please enter a valid CIDR (/24).
+  PublicSubnet2CIDR: 
+    Description: The CIDR(/24) value for VPC
+    Type: String
+    Default: 10.0.1.0/24
+    #Regex to check CIDR
+    AllowedPattern: ^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}(\/24)$
+    ConstraintDescription: Please enter a valid CIDR (/24).
+  PublicSubnet3CIDR: 
+    Description: The CIDR(/24) value for VPC
+    Type: String
+    Default: 10.0.2.0/24
+    #Regex to check CIDR
+    AllowedPattern: ^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}(\/24)$
+    ConstraintDescription: Please enter a valid CIDR (/24).
+  PrivateSubnet1CIDR: 
+    Description: The CIDR(/24) value for VPC
+    Type: String
+    Default: 10.0.128.0/24
+    #Regex to check CIDR
+    AllowedPattern: ^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}(\/24)$
+    ConstraintDescription: Please enter a valid CIDR (/24).
+  PrivateSubnet2CIDR: 
+    Description: The CIDR(/24) value for VPC
+    Type: String
+    Default: 10.0.129.0/24
+    #Regex to check CIDR
+    AllowedPattern: ^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}(\/24)$
+    ConstraintDescription: Please enter a valid CIDR (/24).
+  PrivateSubnet3CIDR: 
+    Description: The CIDR(/24) value for VPC
+    Type: String
+    Default: 10.0.130.0/24
+    #Regex to check CIDR
+    AllowedPattern: ^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}(\/24)$
+    ConstraintDescription: Please enter a valid CIDR (/24).
+  Environment: 
+    Description: The application environment
+    Type: String
+    Default: dev
+    AllowedValues:
+      - dev
+      - qa
+      - prod
+    ConstraintDescription: Please enter a dev/qa/prod.
+
 
 Resources:
   VpcStack:
@@ -32,30 +82,85 @@ Resources:
       Parameters:
         VPCCIDR: !Ref VPCCIDR
         AZs: !Join [",", !Ref AZs]
-        # AZ1: !Select [0, !Ref AZs]
-        # VPCName: !Ref VPCName
-        # PublicSubnet1Cidr: !Ref PublicSubnet1Cidr
-        # PublicSubnet2Cidr: !Ref PublicSubnet2Cidr
+        PublicSubnet1CIDR: !Ref PublicSubnet1CIDR
+        PublicSubnet2CIDR: !Ref PublicSubnet2CIDR
+        PublicSubnet3CIDR: !Ref PublicSubnet3CIDR
+        PrivateSubnet1CIDR: !Ref PrivateSubnet1CIDR
+        PrivateSubnet2CIDR: !Ref PrivateSubnet2CIDR
+        PrivateSubnet3CIDR: !Ref PrivateSubnet3CIDR
+        Environment: !Ref Environment
 
-  # EC2Stack:
-  #   Type: AWS::CloudFormation::Stack
-  #   Properties:
-  #     TemplateURL: !Sub https://cloudformation-templates-atu.s3.amazonaws.com/ec2-creation.yml
-  #     TimeoutInMinutes: 5
-  #     Parameters:
-  #       VPC: !GetAtt VpcStack.Outputs.VPC
-  #       PublicSubnet1: !GetAtt VpcStack.Outputs.PublicSubnet1
-  #       PrivateSubnet1: !GetAtt VpcStack.Outputs.PrivateSubnet1
-  #       PrivateSubnet2: !GetAtt VpcStack.Outputs.PrivateSubnet2
-  #       secSSHJumpbox: !GetAtt VpcStack.Outputs.secSSHJumpbox
-  #       secSSHPrivate: !GetAtt VpcStack.Outputs.secSSHPrivate
+  EC2StackAZ0:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub https://cloudformation-templates-atu.s3.amazonaws.com/ec2-creation.yml
+      TimeoutInMinutes: 5
+      Parameters:
+        VPC: !GetAtt VpcStack.Outputs.VPC
+        PublicSubnet: !GetAtt VpcStack.Outputs.PublicSubnet1
+        PrivateSubnet: !GetAtt VpcStack.Outputs.PrivateSubnet1
+        secSSHJumpbox: !GetAtt VpcStack.Outputs.secSSHJumpbox
+        secSSHPrivate: !GetAtt VpcStack.Outputs.secSSHPrivate
+        AZ: !Select [0, !Ref AZs]
+        Environment: !Ref Environment
 
-  # RDSStack:
-  #   Type: AWS::CloudFormation::Stack
-  #   Properties:
-  #     TemplateURL: !Sub https://cloudformation-templates-atu.s3.amazonaws.com/rds-creation.yml
-  #     TimeoutInMinutes: 5
-  #     Parameters:
-  #       PrivateSubnet1: !GetAtt VpcStack.Outputs.PrivateSubnet1
-  #       PrivateSubnet2: !GetAtt VpcStack.Outputs.PrivateSubnet2
-  #       secDBPrivate: !GetAtt VpcStack.Outputs.secDBPrivate
+  EC2StackAZ1:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub https://cloudformation-templates-atu.s3.amazonaws.com/ec2-creation.yml
+      TimeoutInMinutes: 5
+      Parameters:
+        VPC: !GetAtt VpcStack.Outputs.VPC
+        PublicSubnet: !GetAtt VpcStack.Outputs.PublicSubnet2
+        PrivateSubnet: !GetAtt VpcStack.Outputs.PrivateSubnet2
+        secSSHJumpbox: !GetAtt VpcStack.Outputs.secSSHJumpbox
+        secSSHPrivate: !GetAtt VpcStack.Outputs.secSSHPrivate
+        AZ: !Select [1, !Ref AZs]
+        Environment: !Ref Environment
+
+  EC2StackAZ2:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub https://cloudformation-templates-atu.s3.amazonaws.com/ec2-creation.yml
+      TimeoutInMinutes: 5
+      Parameters:
+        VPC: !GetAtt VpcStack.Outputs.VPC
+        PublicSubnet: !GetAtt VpcStack.Outputs.PublicSubnet3
+        PrivateSubnet: !GetAtt VpcStack.Outputs.PrivateSubnet3
+        secSSHJumpbox: !GetAtt VpcStack.Outputs.secSSHJumpbox
+        secSSHPrivate: !GetAtt VpcStack.Outputs.secSSHPrivate
+        AZ: !Select [2, !Ref AZs]
+        Environment: !Ref Environment
+
+  RDSStack1:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub https://cloudformation-templates-atu.s3.amazonaws.com/rds-creation.yml
+      TimeoutInMinutes: 5
+      Parameters:
+        secDBPrivate: !GetAtt VpcStack.Outputs.secDBPrivate
+        rdsDBSubnetGroup: !GetAtt VpcStack.Outputs.rdsDBSubnetGroup
+        AZ: !Select [0, !Ref AZs]
+        Environment: !Ref Environment
+
+  RDSStack2:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub https://cloudformation-templates-atu.s3.amazonaws.com/rds-creation.yml
+      TimeoutInMinutes: 5
+      Parameters:
+        secDBPrivate: !GetAtt VpcStack.Outputs.secDBPrivate
+        rdsDBSubnetGroup: !GetAtt VpcStack.Outputs.rdsDBSubnetGroup
+        AZ: !Select [1, !Ref AZs]
+        Environment: !Ref Environment
+
+  RDSStack3:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub https://cloudformation-templates-atu.s3.amazonaws.com/rds-creation.yml
+      TimeoutInMinutes: 5
+      Parameters:
+        secDBPrivate: !GetAtt VpcStack.Outputs.secDBPrivate
+        rdsDBSubnetGroup: !GetAtt VpcStack.Outputs.rdsDBSubnetGroup
+        AZ: !Select [2, !Ref AZs]
+        Environment: !Ref Environment 

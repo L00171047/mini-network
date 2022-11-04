@@ -14,10 +14,27 @@ Parameters:
   AZs:
     Description: The list of AZs
     Type: List<String>
-  # AZ1:
-  #   Description: The list of AZs
-  #   Type: String
-
+  PublicSubnet1CIDR: 
+    Description: The PublicSubnet1CIDR(/24) value for VPC
+    Type: String
+  PublicSubnet2CIDR: 
+    Description: The PublicSubnet2CIDR(/24) value for VPC
+    Type: String
+  PublicSubnet3CIDR: 
+    Description: The PublicSubnet3CIDR(/24) value for VPC
+    Type: String
+  PrivateSubnet1CIDR: 
+    Description: The PrivateSubnet1CIDR(/24) value for VPC
+    Type: String
+  PrivateSubnet2CIDR: 
+    Description: The PrivateSubnet2CIDR(/24) value for VPC
+    Type: String
+  PrivateSubnet3CIDR: 
+    Description: The PrivateSubnet3CIDR(/24) value for VPC
+    Type: String
+  Environment:
+    Description: The application environment
+    Type: String
 
 # Rules:
 #   set of rules
@@ -39,230 +56,267 @@ Resources:
       EnableDnsSupport: true
       Tags:
         - Key: Name
-          Value: !Join [ "-", [ "vpc",!Ref "AWS::Region","dev","webApp" ] ]
+          Value: !Join [ "-", [ "vpc",!Ref "AWS::Region",!Ref Environment,"webApp" ] ]
+        - Key: Environment
+          Value: !Ref Environment
           
-  publicSubnet1:
+  PublicSubnet1:
     Type: AWS::EC2::Subnet
     Properties:
       # AvailabilityZone: !Ref AZ1
       AvailabilityZone: !Select [0, !Ref AZs]
       VpcId: !Ref VPC
-      CidrBlock: 10.0.0.0/24
+      CidrBlock: !Ref PublicSubnet1CIDR
       MapPublicIpOnLaunch: true
       Tags:
         - Key: Name
-          Value: publicSubnet1
+          Value: !Join [ "-", [ "subnet",!Select [0, !Ref AZs],"public",!Ref Environment,"webApp" ] ]
+        - Key: Environment
+          Value: !Ref Environment
 
-  # publicSubnet2:
-  #   Type: AWS::EC2::Subnet
-  #   Properties:
-  #     AvailabilityZone: !Select [ 1, !Ref AZs ]
-  #     VpcId: !Ref VPC
-  #     CidrBlock: 10.0.1.0/24
-  #     MapPublicIpOnLaunch: true
-  #     Tags:
-  #       - Key: Name
-  #         Value: publicSubnet2
+  PublicSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Select [1, !Ref AZs]
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PublicSubnet2CIDR
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Join [ "-", [ "subnet",!Select [1, !Ref AZs],"public",!Ref Environment,"webApp" ] ]
+        - Key: Environment
+          Value: !Ref Environment
         
-  # publicSubnet3:
-  #   Type: AWS::EC2::Subnet
-  #   Properties:
-  #     AvailabilityZone: !Select [ 2, !Ref AZs ]
-  #     VpcId: !Ref VPC
-  #     CidrBlock: 10.0.2.0/24
-  #     MapPublicIpOnLaunch: true
-  #     Tags:
-  #       - Key: Name
-  #         Value: publicSubnet2
+  PublicSubnet3:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Select [2, !Ref AZs ]
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PublicSubnet3CIDR
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Join [ "-", [ "subnet",!Select [2, !Ref AZs],"public",!Ref Environment,"webApp" ] ]
+        - Key: Environment
+          Value: !Ref Environment
 
-  # privateSubnet1:
-  #   Type: AWS::EC2::Subnet
-  #   Properties:
-  #     AvailabilityZone: !Select [ 0, !Ref AZs ]
-  #     VpcId: !Ref VPC
-  #     CidrBlock: 10.0.128.0/24
-  #     MapPublicIpOnLaunch: false
-  #     Tags:
-  #       - Key: Name
-  #         Value: privateSubnet1
+  PrivateSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Select [0, !Ref AZs ]
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PrivateSubnet1CIDR
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: !Join [ "-", [ "subnet",!Select [0, !Ref AZs],"private",!Ref Environment,"webApp" ] ]
+        - Key: Environment
+          Value: !Ref Environment
 
-  # privateSubnet2:
-  #   Type: AWS::EC2::Subnet
-  #   Properties:
-  #     AvailabilityZone: !Select [ 1, !Ref AZs ]
-  #     VpcId: !Ref VPC
-  #     CidrBlock: 10.0.129.0/24
-  #     MapPublicIpOnLaunch: false
-  #     Tags:
-  #       - Key: Name
-  #         Value: privateSubnet2
+  PrivateSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Select [1, !Ref AZs ]
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PrivateSubnet2CIDR
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: !Join [ "-", [ "subnet",!Select [1, !Ref AZs],"private",!Ref Environment,"webApp" ] ]
+        - Key: Environment
+          Value: !Ref Environment
 
-  # privateSubnet3:
-  #   Type: AWS::EC2::Subnet
-  #   Properties:
-  #     AvailabilityZone: !Select [ 2, !Ref AZs ]
-  #     VpcId: !Ref VPC
-  #     CidrBlock: 10.0.130.0/24
-  #     MapPublicIpOnLaunch: false
-  #     Tags:
-  #       - Key: Name
-  #         Value: privateSubnet2
+  PrivateSubnet3:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Select [2, !Ref AZs ]
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PrivateSubnet3CIDR
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: !Join [ "-", [ "subnet",!Select [2, !Ref AZs],"private",!Ref Environment,"webApp" ] ]
+        - Key: Environment
+          Value: !Ref Environment
 
-#   PublicRouteTable:
-#     Type: AWS::EC2::RouteTable
-#     Properties:
-#       VpcId: !Ref VPC
-#       Tags:
-#         - Key: Name
-#           Value: routeTableVPC
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Join [ "-", [ "routeTable","public",!Ref Environment,"webApp" ] ]
+        - Key: Environment
+          Value: !Ref Environment
 
-#   igwName:
-#     Type: AWS::EC2::InternetGateway
-#     Properties:
-#       Tags:
-#         - Key: Name
-#           Value: internetGatewayVPC
-#   AttachGateway:
-#     Type: AWS::EC2::VPCGatewayAttachment
-#     Properties:
-#       VpcId: !Ref VPC
-#       InternetGatewayId: !Ref igwName
+  igwName:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Join [ "-", [ "internetGateway",!Ref Environment,"webApp" ] ]
+        - Key: Environment
+          Value: !Ref Environment
+  AttachGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref igwName
   
-#   routeName:
-#     Type: AWS::EC2::Route
-#     Properties:
-#       RouteTableId: !Ref PublicRouteTable
-#       DestinationCidrBlock: 0.0.0.0/0
-#       GatewayId: !Ref igwName
+  routeName:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref igwName
 
-#   routeTableAssocName1:
-#     Type: AWS::EC2::SubnetRouteTableAssociation
-#     Properties:
-#       SubnetId: !Ref publicSubnet1
-#       RouteTableId: !Ref PublicRouteTable
+  routeTableAssocName1:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet1
+      RouteTableId: !Ref PublicRouteTable
 
-#   routeTableAssocName2:
-#     Type: AWS::EC2::SubnetRouteTableAssociation
-#     Properties:
-#       SubnetId: !Ref publicSubnet2
-#       RouteTableId: !Ref PublicRouteTable
+  routeTableAssocName2:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet2
+      RouteTableId: !Ref PublicRouteTable
 
-#   routeTableAssocName3:
-#     Type: AWS::EC2::SubnetRouteTableAssociation
-#     Properties:
-#       SubnetId: !Ref publicSubnet3
-#       RouteTableId: !Ref PublicRouteTable
+  routeTableAssocName3:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet3
+      RouteTableId: !Ref PublicRouteTable
 
-#   secSSHJumpbox:
-#     Type: AWS::EC2::SecurityGroup
-#     Properties:
-#       GroupName: SSHJumpbox
-#       GroupDescription: Security Group to Allow SSH connections into Jumpbox
-#       VpcId: !Ref VPC
-#       SecurityGroupIngress:
-#         - IpProtocol: tcp
-#           FromPort: 22
-#           ToPort: 22
-#           CidrIp: 0.0.0.0/0
-#       SecurityGroupEgress:
-#         - IpProtocol: tcp
-#           FromPort: 22
-#           ToPort: 22
-#           CidrIp: 0.0.0.0/0
-#         - IpProtocol: tcp
-#           FromPort: 80
-#           ToPort: 80
-#           CidrIp: 0.0.0.0/0
-#         - IpProtocol: tcp
-#           FromPort: 443
-#           ToPort: 443
-#           CidrIp: 0.0.0.0/0
-#         - IpProtocol: tcp
-#           FromPort: 3306
-#           ToPort: 3306
-#           CidrIp: 0.0.0.0/0
-#       Tags:
-#         - Key: Name
-#           Value: sg-Jumpbox-SSH
+  secSSHJumpbox:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: SSHJumpbox
+      GroupDescription: Security Group to Allow SSH connections into Jumpbox
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 3306
+          ToPort: 3306
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: !Join [ "-", [ "sec-group",!Ref "AWS::Region",!Ref Environment,"jumpBox" ] ]
+        - Key: Environment
+          Value: !Ref Environment
 
-#   secSSHPrivate:
-#     Type: AWS::EC2::SecurityGroup
-#     Properties:
-#       GroupName: SSHPrivateInstances
-#       GroupDescription: Security Group to Allow SSH connections into Private Instances
-#       VpcId: !Ref VPC
-#       SecurityGroupIngress:
-#         - IpProtocol: tcp
-#           FromPort: 22
-#           ToPort: 22
-#           SourceSecurityGroupId: !GetAtt secSSHJumpbox.GroupId
-#       SecurityGroupEgress:
-#         - IpProtocol: tcp
-#           FromPort: 22
-#           ToPort: 22
-#           DestinationSecurityGroupId: !GetAtt secSSHJumpbox.GroupId
-#         - IpProtocol: tcp
-#           FromPort: 80
-#           ToPort: 80
-#           DestinationSecurityGroupId: !GetAtt secSSHJumpbox.GroupId
-#         - IpProtocol: tcp
-#           FromPort: 443
-#           ToPort: 443
-#           DestinationSecurityGroupId: !GetAtt secSSHJumpbox.GroupId
-#         - IpProtocol: tcp
-#           FromPort: 3306
-#           ToPort: 3306
-#           CidrIp: 0.0.0.0/0
-#       Tags:
-#         - Key: Name
-#           Value: sg-Private-SSH
+  secSSHPrivate:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: SSHPrivateInstances
+      GroupDescription: Security Group to Allow SSH connections into Private Instances
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          SourceSecurityGroupId: !GetAtt secSSHJumpbox.GroupId
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          DestinationSecurityGroupId: !GetAtt secSSHJumpbox.GroupId
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          DestinationSecurityGroupId: !GetAtt secSSHJumpbox.GroupId
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          DestinationSecurityGroupId: !GetAtt secSSHJumpbox.GroupId
+        - IpProtocol: tcp
+          FromPort: 3306
+          ToPort: 3306
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: !Join [ "-", [ "sec-group",!Ref "AWS::Region",!Ref Environment,"webServer" ] ]
+        - Key: Environment
+          Value: !Ref Environment
 
-#   secDBPrivate:
-#     Type: AWS::EC2::SecurityGroup
-#     Properties:
-#       GroupName: SSHPrivateDB
-#       GroupDescription: Security Group to Allows to connect to RDS from ec2
-#       VpcId: !Ref VPC
-#       SecurityGroupIngress:
-#         - IpProtocol: tcp
-#           FromPort: 3306
-#           ToPort: 3306
-#           SourceSecurityGroupId: !GetAtt secSSHJumpbox.GroupId
-#         - IpProtocol: tcp
-#           FromPort: 3306
-#           ToPort: 3306
-#           SourceSecurityGroupId: !GetAtt secSSHPrivate.GroupId
-#       # SecurityGroupEgress:
-#       #   - IpProtocol: tcp
-#       #     FromPort: 22
-#       #     ToPort: 22
-#       #     DestinationSecurityGroupId: !GetAtt secSSHJumpbox.GroupId
-#       Tags:
-#         - Key: Name
-#           Value: sg-Private-DB
+  secDBPrivate:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: SSHPrivateDB
+      GroupDescription: Security Group to Allows to connect to RDS from ec2
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 3306
+          ToPort: 3306
+          SourceSecurityGroupId: !GetAtt secSSHJumpbox.GroupId
+        - IpProtocol: tcp
+          FromPort: 3306
+          ToPort: 3306
+          SourceSecurityGroupId: !GetAtt secSSHPrivate.GroupId
+      Tags:
+        - Key: Name
+          Value: !Join [ "-", [ "sec-group",!Ref "AWS::Region",!Ref Environment,"rds" ] ]
+        - Key: Environment
+          Value: !Ref Environment
 
-# Outputs:
-#   VPC:
-#      Description: The ID of the VPC
-#      Value: !Ref VPC
-#   PublicSubnet1:
-#      Description: The public subnet
-#      Value: !Ref publicSubnet1
-#   PrivateSubnet1:
-#      Description: The private subnet 1
-#      Value: !Ref privateSubnet1
-#   PrivateSubnet2:
-#      Description: The private subnet 2
-#      Value: !Ref privateSubnet2
-#   secSSHJumpbox:
-#      Description: The security group for jumpbox
-#      Value: !Ref secSSHJumpbox
-#   secSSHPrivate:
-#      Description: The security group for ec2 instances in private subnet
-#      Value: !Ref secSSHPrivate
-#   secDBPrivate:
-#      Description: The security group for DB in private subnet
-#      Value: !Ref secDBPrivate
+  rdsDBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: Subnet group for RDS Instance
+      SubnetIds:
+        - !Ref PrivateSubnet1
+        - !Ref PrivateSubnet2
+        - !Ref PrivateSubnet3
 
-# Outputs:
-#   set of outputs
+Outputs:
+  VPC:
+     Description: The ID of the VPC
+     Value: !Ref VPC
+  PublicSubnet1:
+     Description: The public subnet
+     Value: !Ref PublicSubnet1
+  PrivateSubnet1:
+     Description: The private subnet 1
+     Value: !Ref PrivateSubnet1
+  PublicSubnet2:
+     Description: The public subnet
+     Value: !Ref PublicSubnet2
+  PrivateSubnet2:
+     Description: The private subnet 1
+     Value: !Ref PrivateSubnet2
+  PublicSubnet3:
+     Description: The public subnet
+     Value: !Ref PublicSubnet3
+  PrivateSubnet3:
+     Description: The private subnet 1
+     Value: !Ref PrivateSubnet3
+  secSSHJumpbox:
+     Description: The security group for jumpbox
+     Value: !Ref secSSHJumpbox
+  secSSHPrivate:
+     Description: The security group for ec2 instances in private subnet
+     Value: !Ref secSSHPrivate
+  secDBPrivate:
+     Description: The security group for DB in private subnet
+     Value: !Ref secDBPrivate
+  rdsDBSubnetGroup:
+     Description: The security group for DB in private subnet
+     Value: !Ref rdsDBSubnetGroup

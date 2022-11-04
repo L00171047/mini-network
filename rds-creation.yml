@@ -8,33 +8,31 @@ Description: >
 #   template metadata
 
 Parameters:
-  PrivateSubnet1:
-     Description: The private subnet 1
-     Type: String
-  PrivateSubnet2:
-     Description: The private subnet 2
-     Type: String
   secDBPrivate:
      Description: The secDBPrivate
      Type: String
+  rdsDBSubnetGroup:
+     Description: The rdsDBSubnetGroup
+     Type: String
+  AZ:
+    Description: The availability zone
+    Type: String
+  Environment:
+    Description: The application environment
+    Type: String
+
+  
 
 Resources:
-  rdsDBSubnetGroup:
-    Type: AWS::RDS::DBSubnetGroup
-    Properties:
-      DBSubnetGroupDescription: Subnet group for RDS Instance
-      SubnetIds:
-        - !Ref PrivateSubnet1
-        - !Ref PrivateSubnet2
 
   rdsDBInstance:
     Type: AWS::RDS::DBInstance
     Properties:
       AllocatedStorage: 20
       DBInstanceClass: db.t3.micro
-      AvailabilityZone: !Select [ 0, !GetAZs '' ]
+      AvailabilityZone: !Ref AZ
       BackupRetentionPeriod: 0
-      DBInstanceIdentifier: production-database2
+      DBInstanceIdentifier: !Join [ "-", [!Ref Environment,"database" ] ]
       DBSubnetGroupName: !Ref rdsDBSubnetGroup
       Engine: mysql
       EngineVersion: 8.0.28
@@ -56,7 +54,7 @@ Resources:
         - !Ref secDBPrivate
       Tags:
         - Key: Name
-          Value: database-1
+          Value: !Join [ "-", [ "rds",!Ref AZ,!Ref Environment,"database" ] ]
 
 # Outputs:
 #   set of outputs

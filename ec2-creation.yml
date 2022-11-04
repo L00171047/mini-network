@@ -11,20 +11,23 @@ Parameters:
   VPC:
     Description: The ID of the VPC
     Type: String
-  PublicSubnet1:
+  PublicSubnet:
     Description: The public subnet
     Type: String
-  PrivateSubnet1:
+  PrivateSubnet:
     Description: The private subnet 1
-    Type: String
-  PrivateSubnet2:
-    Description: The private subnet 2
     Type: String
   secSSHJumpbox:
     Description: The secSSHJumpbox
     Type: String
   secSSHPrivate:
     Description: The secSSHJumpbox
+    Type: String
+  AZ:
+    Description: The availability zone
+    Type: String
+  Environment:
+    Description: The application environment
     Type: String
 
 # Rules:
@@ -46,13 +49,15 @@ Resources:
       KeyName: jumpbox
       ImageId: ami-09d3b3274b6c5d4aa
       InstanceType: t2.micro
-      AvailabilityZone: !Select [ 0, !GetAZs '' ]
-      SubnetId: !Ref PublicSubnet1
+      AvailabilityZone: !Ref AZ
+      SubnetId: !Ref PublicSubnet
       SecurityGroupIds:
         - !Ref secSSHJumpbox
       Tags:
         - Key: Name
-          Value: jumpBox    
+          Value: !Join [ "-", [ "ec2",!Ref AZ,!Ref Environment,"jumpBox" ] ]
+        - Key: Environment
+          Value: !Ref Environment   
 
   webServerEc2:
     Type: AWS::EC2::Instance
@@ -60,13 +65,15 @@ Resources:
       KeyName: jumpbox
       ImageId: ami-09d3b3274b6c5d4aa
       InstanceType: t2.micro
-      AvailabilityZone: !Select [ 0, !GetAZs '' ]
-      SubnetId: !Ref PrivateSubnet1
+      AvailabilityZone: !Ref AZ
+      SubnetId: !Ref PrivateSubnet
       SecurityGroupIds:
         - !Ref secSSHPrivate
       Tags:
         - Key: Name
-          Value: webServer
+          Value: !Join [ "-", [ "ec2",!Ref AZ,!Ref Environment,"webServer" ] ]
+        - Key: Environment
+          Value: !Ref Environment 
 
 # Outputs:
 #   set of outputs
