@@ -17,6 +17,12 @@ Parameters:
 # (\/([0-9]|[1-2][0-9]|3[0-2]))$  If we need to match CIDR prefix of 0-32
     ConstraintDescription: Please enter a valid CIDR.
 
+  AZs:
+    Description: Select 3 Availability zones
+    Type: List<AWS::EC2::AvailabilityZone::Name>
+    Default: us-east-1a, us-east-1b,us-east-1c
+    ConstraintDescription: Please select 3 Availability zones
+
 Resources:
   VpcStack:
     Type: AWS::CloudFormation::Stack
@@ -25,29 +31,31 @@ Resources:
       TimeoutInMinutes: 5
       Parameters:
         VPCCIDR: !Ref VPCCIDR
+        AZs: !Join [",", !Ref AZs]
+        # AZ1: !Select [0, !Ref AZs]
         # VPCName: !Ref VPCName
         # PublicSubnet1Cidr: !Ref PublicSubnet1Cidr
         # PublicSubnet2Cidr: !Ref PublicSubnet2Cidr
 
-  EC2Stack:
-    Type: AWS::CloudFormation::Stack
-    Properties:
-      TemplateURL: !Sub https://cloudformation-templates-atu.s3.amazonaws.com/ec2-creation.yml
-      TimeoutInMinutes: 5
-      Parameters:
-        VPC: !GetAtt VpcStack.Outputs.VPC
-        PublicSubnet1: !GetAtt VpcStack.Outputs.PublicSubnet1
-        PrivateSubnet1: !GetAtt VpcStack.Outputs.PrivateSubnet1
-        PrivateSubnet2: !GetAtt VpcStack.Outputs.PrivateSubnet2
-        secSSHJumpbox: !GetAtt VpcStack.Outputs.secSSHJumpbox
-        secSSHPrivate: !GetAtt VpcStack.Outputs.secSSHPrivate
+  # EC2Stack:
+  #   Type: AWS::CloudFormation::Stack
+  #   Properties:
+  #     TemplateURL: !Sub https://cloudformation-templates-atu.s3.amazonaws.com/ec2-creation.yml
+  #     TimeoutInMinutes: 5
+  #     Parameters:
+  #       VPC: !GetAtt VpcStack.Outputs.VPC
+  #       PublicSubnet1: !GetAtt VpcStack.Outputs.PublicSubnet1
+  #       PrivateSubnet1: !GetAtt VpcStack.Outputs.PrivateSubnet1
+  #       PrivateSubnet2: !GetAtt VpcStack.Outputs.PrivateSubnet2
+  #       secSSHJumpbox: !GetAtt VpcStack.Outputs.secSSHJumpbox
+  #       secSSHPrivate: !GetAtt VpcStack.Outputs.secSSHPrivate
 
-  RDSStack:
-    Type: AWS::CloudFormation::Stack
-    Properties:
-      TemplateURL: !Sub https://cloudformation-templates-atu.s3.amazonaws.com/rds-creation.yml
-      TimeoutInMinutes: 5
-      Parameters:
-        PrivateSubnet1: !GetAtt VpcStack.Outputs.PrivateSubnet1
-        PrivateSubnet2: !GetAtt VpcStack.Outputs.PrivateSubnet2
-        secDBPrivate: !GetAtt VpcStack.Outputs.secDBPrivate
+  # RDSStack:
+  #   Type: AWS::CloudFormation::Stack
+  #   Properties:
+  #     TemplateURL: !Sub https://cloudformation-templates-atu.s3.amazonaws.com/rds-creation.yml
+  #     TimeoutInMinutes: 5
+  #     Parameters:
+  #       PrivateSubnet1: !GetAtt VpcStack.Outputs.PrivateSubnet1
+  #       PrivateSubnet2: !GetAtt VpcStack.Outputs.PrivateSubnet2
+  #       secDBPrivate: !GetAtt VpcStack.Outputs.secDBPrivate
