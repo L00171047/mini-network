@@ -2,78 +2,87 @@
 AWSTemplateFormatVersion: "2010-09-09"
 
 Description: >
-  The template is used to create a VPC with CIDR provided as parameter.
+  The template is used to create jumpbox and webServer instances.
 
-# Metadata:
-#   template metadata
-
+#
+#PARAMETERS used to Create Ec2 Instances
+#
 Parameters:
-  VPC:
-    Description: The ID of the VPC
-    Type: String
   PublicSubnet:
-    Description: The public subnet
+    Description: The public subnet where jumpbox needs to be created
     Type: String
   PrivateSubnet:
-    Description: The private subnet 1
+    Description: The private subnet where application server needs to be created
     Type: String
-  secSSHJumpbox:
-    Description: The secSSHJumpbox
+  secJumpbox:
+    Description: The security group to be configured for jumpbox
     Type: String
-  secSSHPrivate:
-    Description: The secSSHJumpbox
+  secEc2Private:
+    Description: The security group to be configured for application server
     Type: String
   AZ:
-    Description: The availability zone
+    Description: The availability zone where Ec2 needs to be created
     Type: String
   Environment:
     Description: The application environment
     Type: String
+  LatestAmiId:
+    Description: ami ID
+    Type: String
+  Ec2InstanceType:
+    Description: The instance Type of ec2
+    Type: String
+  StackName:
+    Description: The Root stack name
+    Type: String
 
-# Rules:
-#   set of rules
-
-# Mappings:
-#   set of mappings
-
-# Conditions:
-#   set of conditions
-
-# Transform:
-#   set of transforms
-
+#
+#RESOURCES created
+#
 Resources:
+
+#jumpbox created in public subnet
   jumpBoxEC2:
     Type: AWS::EC2::Instance
     Properties:
       KeyName: jumpbox
-      ImageId: ami-09d3b3274b6c5d4aa
-      InstanceType: t2.micro
+      ImageId: !Ref LatestAmiId
+      InstanceType: !Ref Ec2InstanceType
       AvailabilityZone: !Ref AZ
       SubnetId: !Ref PublicSubnet
       SecurityGroupIds:
-        - !Ref secSSHJumpbox
+        - !Ref secJumpbox
       Tags:
         - Key: Name
-          Value: !Join [ "-", [ "ec2",!Ref AZ,!Ref Environment,"jumpBox" ] ]
+          Value: !Join [ "-", [ "ec2",!Ref AZ,!Ref Environment,"jumpBox",!Ref StackName ] ]
         - Key: Environment
           Value: !Ref Environment   
 
+#webServer created in private subnet
   webServerEc2:
     Type: AWS::EC2::Instance
     Properties:
-      KeyName: jumpbox
-      ImageId: ami-09d3b3274b6c5d4aa
-      InstanceType: t2.micro
+      KeyName: webServer
+      ImageId: !Ref LatestAmiId
+      InstanceType: !Ref Ec2InstanceType
       AvailabilityZone: !Ref AZ
       SubnetId: !Ref PrivateSubnet
       SecurityGroupIds:
-        - !Ref secSSHPrivate
+        - !Ref secEc2Private
       Tags:
         - Key: Name
-          Value: !Join [ "-", [ "ec2",!Ref AZ,!Ref Environment,"webServer" ] ]
+          Value: !Join [ "-", [ "ec2",!Ref AZ,!Ref Environment,"webServer",!Ref StackName  ] ]
         - Key: Environment
           Value: !Ref Environment 
 
-# Outputs:
-#   set of outputs
+#
+#OUTPUT - these values can be used outside the stack
+#
+Outputs:
+#EC2 Instances
+  jumpBoxEC2:
+     Description: The id of jumpbox ec2
+     Value: !Ref jumpBoxEC2
+  webServerEc2:
+     Description: The id of webServer 
+     Value: !Ref webServerEc2

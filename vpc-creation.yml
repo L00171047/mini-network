@@ -4,9 +4,9 @@ AWSTemplateFormatVersion: "2010-09-09"
 Description: >
   The template is used to create a VPC with CIDR provided as parameter.
 
-# Metadata:
-#   template metadata
-
+#
+#PARAMETERS used to Create VPC and subnets
+#
 Parameters:
   VPCCIDR: 
     Description: The CIDR(/16) value for VPC
@@ -35,20 +35,16 @@ Parameters:
   Environment:
     Description: The application environment
     Type: String
+  StackName:
+    Description: The Root stack name
+    Type: String
 
-# Rules:
-#   set of rules
-
-# Mappings:
-#   set of mappings
-
-# Conditions:
-#   set of conditions
-
-# Transform:
-#   set of transforms
-
+#
+#RESOURCES created
+#
 Resources:
+
+#VPC
   VPC:
     Type: AWS::EC2::VPC
     Properties:
@@ -56,21 +52,21 @@ Resources:
       EnableDnsSupport: true
       Tags:
         - Key: Name
-          Value: !Join [ "-", [ "vpc",!Ref "AWS::Region",!Ref Environment,"webApp" ] ]
+          Value: !Join [ "-", [ "vpc",!Ref "AWS::Region",!Ref Environment,!Ref StackName ] ]
         - Key: Environment
           Value: !Ref Environment
-          
+
+#Public Subnets          
   PublicSubnet1:
     Type: AWS::EC2::Subnet
     Properties:
-      # AvailabilityZone: !Ref AZ1
       AvailabilityZone: !Select [0, !Ref AZs]
       VpcId: !Ref VPC
       CidrBlock: !Ref PublicSubnet1CIDR
       MapPublicIpOnLaunch: true
       Tags:
         - Key: Name
-          Value: !Join [ "-", [ "subnet",!Select [0, !Ref AZs],"public",!Ref Environment,"webApp" ] ]
+          Value: !Join [ "-", [ "subnet",!Select [0, !Ref AZs],"public",!Ref Environment,!Ref StackName  ] ]
         - Key: Environment
           Value: !Ref Environment
 
@@ -83,7 +79,7 @@ Resources:
       MapPublicIpOnLaunch: true
       Tags:
         - Key: Name
-          Value: !Join [ "-", [ "subnet",!Select [1, !Ref AZs],"public",!Ref Environment,"webApp" ] ]
+          Value: !Join [ "-", [ "subnet",!Select [1, !Ref AZs],"public",!Ref Environment,!Ref StackName  ] ]
         - Key: Environment
           Value: !Ref Environment
         
@@ -96,10 +92,11 @@ Resources:
       MapPublicIpOnLaunch: true
       Tags:
         - Key: Name
-          Value: !Join [ "-", [ "subnet",!Select [2, !Ref AZs],"public",!Ref Environment,"webApp" ] ]
+          Value: !Join [ "-", [ "subnet",!Select [2, !Ref AZs],"public",!Ref Environment,!Ref StackName  ] ]
         - Key: Environment
           Value: !Ref Environment
 
+#Private Subnets   
   PrivateSubnet1:
     Type: AWS::EC2::Subnet
     Properties:
@@ -109,7 +106,7 @@ Resources:
       MapPublicIpOnLaunch: false
       Tags:
         - Key: Name
-          Value: !Join [ "-", [ "subnet",!Select [0, !Ref AZs],"private",!Ref Environment,"webApp" ] ]
+          Value: !Join [ "-", [ "subnet",!Select [0, !Ref AZs],"private",!Ref Environment,!Ref StackName  ] ]
         - Key: Environment
           Value: !Ref Environment
 
@@ -122,7 +119,7 @@ Resources:
       MapPublicIpOnLaunch: false
       Tags:
         - Key: Name
-          Value: !Join [ "-", [ "subnet",!Select [1, !Ref AZs],"private",!Ref Environment,"webApp" ] ]
+          Value: !Join [ "-", [ "subnet",!Select [1, !Ref AZs],"private",!Ref Environment,!Ref StackName  ] ]
         - Key: Environment
           Value: !Ref Environment
 
@@ -135,17 +132,18 @@ Resources:
       MapPublicIpOnLaunch: false
       Tags:
         - Key: Name
-          Value: !Join [ "-", [ "subnet",!Select [2, !Ref AZs],"private",!Ref Environment,"webApp" ] ]
+          Value: !Join [ "-", [ "subnet",!Select [2, !Ref AZs],"private",!Ref Environment,!Ref StackName  ] ]
         - Key: Environment
           Value: !Ref Environment
 
+#Routes/ RouteTable/ Gateway   
   PublicRouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: !Join [ "-", [ "routeTable","public",!Ref Environment,"webApp" ] ]
+          Value: !Join [ "-", [ "routeTable","public",!Ref Environment,!Ref StackName  ] ]
         - Key: Environment
           Value: !Ref Environment
 
@@ -154,7 +152,7 @@ Resources:
     Properties:
       Tags:
         - Key: Name
-          Value: !Join [ "-", [ "internetGateway",!Ref Environment,"webApp" ] ]
+          Value: !Join [ "-", [ "internetGateway",!Ref Environment,!Ref StackName  ] ]
         - Key: Environment
           Value: !Ref Environment
   AttachGateway:
@@ -188,94 +186,65 @@ Resources:
       SubnetId: !Ref PublicSubnet3
       RouteTableId: !Ref PublicRouteTable
 
-  secSSHJumpbox:
-    Type: AWS::EC2::SecurityGroup
+#Call stack to create Security groups for instances in AZ1
+  secGroupAZ1:
+    Type: AWS::CloudFormation::Stack
     Properties:
-      GroupName: SSHJumpbox
-      GroupDescription: Security Group to Allow SSH connections into Jumpbox
-      VpcId: !Ref VPC
-      SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: 22
-          ToPort: 22
-          CidrIp: 0.0.0.0/0
-      SecurityGroupEgress:
-        - IpProtocol: tcp
-          FromPort: 22
-          ToPort: 22
-          CidrIp: 0.0.0.0/0
-        - IpProtocol: tcp
-          FromPort: 80
-          ToPort: 80
-          CidrIp: 0.0.0.0/0
-        - IpProtocol: tcp
-          FromPort: 443
-          ToPort: 443
-          CidrIp: 0.0.0.0/0
-        - IpProtocol: tcp
-          FromPort: 3306
-          ToPort: 3306
-          CidrIp: 0.0.0.0/0
-      Tags:
-        - Key: Name
-          Value: !Join [ "-", [ "sec-group",!Ref "AWS::Region",!Ref Environment,"jumpBox" ] ]
-        - Key: Environment
-          Value: !Ref Environment
+      TemplateURL: !Sub https://cloudformation-templates-atu.s3.amazonaws.com/security-group-creation.yml
+      TimeoutInMinutes: 5
+      Parameters:
+        VPC: !Ref VPC
+        AZ: !Select [0, !Ref AZs ]
+        PublicSubnetCIDR: !Ref PublicSubnet1CIDR
+        PrivateSubnetCIDR: !Ref PrivateSubnet1CIDR
+        Environment: !Ref Environment
+        StackName: !Ref StackName
 
-  secSSHPrivate:
-    Type: AWS::EC2::SecurityGroup
+#Call stack to create Security groups for instances in AZ2
+  secGroupAZ2:
+    Type: AWS::CloudFormation::Stack
     Properties:
-      GroupName: SSHPrivateInstances
-      GroupDescription: Security Group to Allow SSH connections into Private Instances
-      VpcId: !Ref VPC
-      SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: 22
-          ToPort: 22
-          SourceSecurityGroupId: !GetAtt secSSHJumpbox.GroupId
-      SecurityGroupEgress:
-        - IpProtocol: tcp
-          FromPort: 22
-          ToPort: 22
-          DestinationSecurityGroupId: !GetAtt secSSHJumpbox.GroupId
-        - IpProtocol: tcp
-          FromPort: 80
-          ToPort: 80
-          DestinationSecurityGroupId: !GetAtt secSSHJumpbox.GroupId
-        - IpProtocol: tcp
-          FromPort: 443
-          ToPort: 443
-          DestinationSecurityGroupId: !GetAtt secSSHJumpbox.GroupId
-        - IpProtocol: tcp
-          FromPort: 3306
-          ToPort: 3306
-          CidrIp: 0.0.0.0/0
-      Tags:
-        - Key: Name
-          Value: !Join [ "-", [ "sec-group",!Ref "AWS::Region",!Ref Environment,"webServer" ] ]
-        - Key: Environment
-          Value: !Ref Environment
+      TemplateURL: !Sub https://cloudformation-templates-atu.s3.amazonaws.com/security-group-creation.yml
+      TimeoutInMinutes: 5
+      Parameters:
+        VPC: !Ref VPC
+        AZ: !Select [1, !Ref AZs ]
+        PublicSubnetCIDR: !Ref PublicSubnet2CIDR
+        PrivateSubnetCIDR: !Ref PrivateSubnet2CIDR
+        Environment: !Ref Environment
+        StackName: !Ref StackName
 
-  secDBPrivate:
-    Type: AWS::EC2::SecurityGroup
+#Call stack to create Security groups for instances in AZ2
+  secGroupAZ3:
+    Type: AWS::CloudFormation::Stack
     Properties:
-      GroupName: SSHPrivateDB
-      GroupDescription: Security Group to Allows to connect to RDS from ec2
-      VpcId: !Ref VPC
-      SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: 3306
-          ToPort: 3306
-          SourceSecurityGroupId: !GetAtt secSSHJumpbox.GroupId
-        - IpProtocol: tcp
-          FromPort: 3306
-          ToPort: 3306
-          SourceSecurityGroupId: !GetAtt secSSHPrivate.GroupId
-      Tags:
-        - Key: Name
-          Value: !Join [ "-", [ "sec-group",!Ref "AWS::Region",!Ref Environment,"rds" ] ]
-        - Key: Environment
-          Value: !Ref Environment
+      TemplateURL: !Sub https://cloudformation-templates-atu.s3.amazonaws.com/security-group-creation.yml
+      TimeoutInMinutes: 5
+      Parameters:
+        VPC: !Ref VPC
+        AZ: !Select [2, !Ref AZs ]
+        PublicSubnetCIDR: !Ref PublicSubnet3CIDR
+        PrivateSubnetCIDR: !Ref PrivateSubnet3CIDR
+        Environment: !Ref Environment
+        StackName: !Ref StackName
+
+#Call stack to create NACL for all subnets
+  naclCreation:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub https://cloudformation-templates-atu.s3.amazonaws.com/nacl-creation.yml
+      TimeoutInMinutes: 5
+      Parameters:
+        VPC: !Ref VPC
+        VPCCIDR: !Ref VPCCIDR
+        PublicSubnet1: !Ref PublicSubnet1
+        PublicSubnet2: !Ref PublicSubnet2
+        PublicSubnet3: !Ref PublicSubnet3
+        PrivateSubnet1: !Ref PrivateSubnet1
+        PrivateSubnet2: !Ref PrivateSubnet2
+        PrivateSubnet3: !Ref PrivateSubnet3
+        Environment: !Ref Environment
+        StackName: !Ref StackName
 
   rdsDBSubnetGroup:
     Type: AWS::RDS::DBSubnetGroup
@@ -287,9 +256,12 @@ Resources:
         - !Ref PrivateSubnet3
 
 Outputs:
+#VPC
   VPC:
      Description: The ID of the VPC
      Value: !Ref VPC
+
+#Subnets
   PublicSubnet1:
      Description: The public subnet
      Value: !Ref PublicSubnet1
@@ -308,15 +280,35 @@ Outputs:
   PrivateSubnet3:
      Description: The private subnet 1
      Value: !Ref PrivateSubnet3
-  secSSHJumpbox:
-     Description: The security group for jumpbox
-     Value: !Ref secSSHJumpbox
-  secSSHPrivate:
-     Description: The security group for ec2 instances in private subnet
-     Value: !Ref secSSHPrivate
-  secDBPrivate:
-     Description: The security group for DB in private subnet
-     Value: !Ref secDBPrivate
   rdsDBSubnetGroup:
      Description: The security group for DB in private subnet
      Value: !Ref rdsDBSubnetGroup
+
+#Security Groups 
+  secJumpbox1:
+     Description: The security group for jumpbox 1
+     Value: !GetAtt secGroupAZ1.Outputs.secJumpbox
+  secEc2Private1:
+     Description: The security group for ec2 instances in private subnet 1
+     Value: !GetAtt secGroupAZ1.Outputs.secEc2Private
+  secDBPrivate1:
+     Description: The security group for DB in private subnet1
+     Value: !GetAtt secGroupAZ1.Outputs.secDBPrivate
+  secJumpbox2:
+     Description: The security group for jumpbox 2
+     Value: !GetAtt secGroupAZ2.Outputs.secJumpbox
+  secEc2Private2:
+     Description: The security group for ec2 instances in private subnet 2
+     Value: !GetAtt secGroupAZ2.Outputs.secJumpbox
+  secDBPrivate2:
+     Description: The security group for DB in private subnet 2
+     Value: !GetAtt secGroupAZ2.Outputs.secJumpbox
+  secJumpbox3:
+     Description: The security group for jumpbox 3
+     Value: !GetAtt secGroupAZ3.Outputs.secJumpbox
+  secEc2Private3:
+     Description: The security group for ec2 instances in private subnet 3
+     Value: !GetAtt secGroupAZ3.Outputs.secJumpbox
+  secDBPrivate3:
+     Description: The security group for DB in private subnet 3
+     Value: !GetAtt secGroupAZ3.Outputs.secJumpbox
