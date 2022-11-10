@@ -27,8 +27,23 @@ Parameters:
     Description: The Root stack name
     Type: String
   DBInstanceType:
-    Description: The Root stack name
+    Description: The RDS DB Instance type
     Type: String
+
+#
+#MAPPING
+#
+Mappings:
+  RDSParamsFromEnvironment:
+    dev:
+      RDSStorageSize: 20
+      BackupRetentionDays: 0
+    qa:
+      RDSStorageSize: 50
+      BackupRetentionDays: 7
+    prod:
+      RDSStorageSize: 100
+      BackupRetentionDays: 14
 
 #
 #RESOURCES created
@@ -39,11 +54,11 @@ Resources:
   rdsDBInstance:
     Type: AWS::RDS::DBInstance
     Properties:
-      AllocatedStorage: 20
+      AllocatedStorage: !FindInMap [RDSParamsFromEnvironment, !Ref Environment, RDSStorageSize]
       DBInstanceClass: !Ref DBInstanceType
       AllowMajorVersionUpgrade: false
       AvailabilityZone: !Ref AZ
-      BackupRetentionPeriod: 0
+      BackupRetentionPeriod: !FindInMap [RDSParamsFromEnvironment, !Ref Environment, BackupRetentionDays]
       DBInstanceIdentifier: !Join [ "-", [!Ref Environment,"db",!Ref AZ,!Ref StackName] ]
       DBSubnetGroupName: !Ref rdsDBSubnetGroup
       Engine: mysql
