@@ -52,6 +52,8 @@ Resources:
        Tags:
        - Key: Name
          Value: !Join [ "-", [ "nacl",!Ref "AWS::Region",!Ref Environment,"public",!Ref StackName  ] ]
+       - Key: Environment
+         Value: !Ref Environment
 
 #Allow ssh(22) for inbound communication
   InboundRulePublicSSH:
@@ -191,6 +193,8 @@ Resources:
        Tags:
        - Key: Name
          Value: !Join [ "-", [ "nacl",!Ref "AWS::Region",!Ref Environment,"private",!Ref StackName  ] ]
+       - Key: Environment
+         Value: !Ref Environment
 
 #Allow ssh(22) for inbound communication within VPC
   InboundRulePrivateSSH:

@@ -279,7 +279,6 @@ Resources:
       TemplateURL: !Sub https://cloudformation-templates-atu.s3.amazonaws.com/ec2-creation.yml
       TimeoutInMinutes: 5
       Parameters:
-        # VPC: !GetAtt VpcStack.Outputs.VPC
         PublicSubnet: !GetAtt VpcStack.Outputs.PublicSubnet2
         PrivateSubnet: !GetAtt VpcStack.Outputs.PrivateSubnet2
         secJumpbox: !GetAtt VpcStack.Outputs.secJumpbox2
@@ -297,7 +296,6 @@ Resources:
       TemplateURL: !Sub https://cloudformation-templates-atu.s3.amazonaws.com/ec2-creation.yml
       TimeoutInMinutes: 5
       Parameters:
-        # VPC: !GetAtt VpcStack.Outputs.VPC
         PublicSubnet: !GetAtt VpcStack.Outputs.PublicSubnet3
         PrivateSubnet: !GetAtt VpcStack.Outputs.PrivateSubnet3
         secJumpbox: !GetAtt VpcStack.Outputs.secJumpbox3
@@ -370,7 +368,7 @@ Outputs:
     Export:
       Name: !Join [ "-", [ "ec2",!Select [0, !Ref AZs],!Ref Environment,"jumpBox",!Ref StackName ] ]
   WebServerAZ1:
-    Description: The WebServer1 id 
+    Description: The WebServer1 id
     Value: !GetAtt EC2StackAZ1.Outputs.webServerEc2
     Export:
       Name: !Join [ "-", [ "ec2",!Select [0, !Ref AZs],!Ref Environment,"webServer",!Ref StackName ] ]
